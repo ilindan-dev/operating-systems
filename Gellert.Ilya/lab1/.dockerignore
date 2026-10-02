@@ -1,0 +1,9 @@
+build/
+build-*/
+cmake-build-*/
+out/
+.vscode/
+.idea/
+disk_monitor
+*.log
+*.pid
