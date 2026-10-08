@@ -1,13 +1,39 @@
-//
-// Created by ilindan on 10/8/26.
-//
+#pragma once
 
-#ifndef LOCALCHAT_CLIENT_WINDOW_HPP
-#define LOCALCHAT_CLIENT_WINDOW_HPP
+#include <sys/types.h>
 
+#include <QString>
+#include <optional>
+#include <string>
 
-class client_window {
+#include "client/model/client_session.hpp"
+#include "ui/chat_window.hpp"
+
+namespace chat::client {
+
+/// The client's window: connects ClientSession with the shared ChatWindow.
+class ClientWindow : private ClientListener {
+public:
+    ClientWindow(pid_t hostPid, const QString& name);
+    ~ClientWindow() override;
+
+    ClientWindow(const ClientWindow&) = delete;
+    ClientWindow& operator=(const ClientWindow&) = delete;
+
+    /// Handshake and channel; returns an error message for the user on failure.
+    [[nodiscard]] std::optional<QString> connect();
+    void show();
+
+private:
+    void onJoined(proto::ParticipantId id, const std::string& name) override;
+    void onLeft(proto::ParticipantId id, const std::string& reason) override;
+    void onMessage(const proto::Message& message) override;
+    void onDisconnected(const std::string& reason) override;
+
+    template <typename F> void inGuiThread(F&& action);
+
+    ui::ChatWindow window_;
+    ClientSession session_; ///< declared after the window: stopped before the window goes away
 };
 
-
-#endif //LOCALCHAT_CLIENT_WINDOW_HPP
+} // namespace chat::client
